@@ -4,9 +4,10 @@ from tqdm import tqdm
 from api_utils import search_manga, get_chapters
 from download_utils import download_chapter_images
 from page_order import rename_images_in_folder
+from config import LIMIT, OFFSET
 
-limit = 5  # How many chapters to download at once
-offset = 0  # Offset for beyond than 5 chapters mate
+
+limit = LIMIT  # How many chapters to download at once
 
 LOG_PATH = "log.json"  # so it won't download the same chapter like a fool
 
@@ -29,6 +30,16 @@ def main():
         print("No title provided.")
         return
 
+    range_input = input("which chapters do you want to donwload?").strip()
+
+    chapter_from = None
+    chapter_to = None
+
+    if "-" in range_input:
+        chapter_from, chapter_to = map(float, range_input.split("-"))
+    elif range_input:
+        chapter_from = float(range_input)
+
     manga_id = search_manga(title)
     if not manga_id:
         print("Could not get manga info.")
@@ -36,17 +47,17 @@ def main():
 
     log = load_log()
 
-    offset = 0  # Reset in case changed outside
+
+    offset = OFFSET # Reset offset for each run
     
     while True:
-        chapters = get_chapters(manga_id, limit=limit, offset=offset)
+        chapters = get_chapters(manga_id, limit=LIMIT, offset=OFFSET, chapter_from=chapter_from, chapter_to=chapter_to)
         if not chapters:
             print("No more chapters found.")
             break
 
-        print(f"Found {len(chapters)} chapters (offset={offset}). Starting download...\n")
+        print(f"Found {len(chapters)} chapters (offset={OFFSET}). Starting download...\n")
 
-        new_chapters_downloaded = False
 
         for chapter in tqdm(chapters, desc="Chapters Downloaded", unit="chapter"):
             chapter_id = chapter["id"]

@@ -2,6 +2,7 @@ import os
 import re
 import requests
 from tqdm import tqdm
+from config import DOWNLOAD_PATH
 
 def download_image(url, path):
     try:
@@ -15,7 +16,7 @@ def download_image(url, path):
 def sanitize_filename(name):
     return re.sub(r'[\\/*?:"<>|]', "", name)
 
-def download_chapter_images(chapter, manga_title, base_download_path="../manga-downloads"):
+def download_chapter_images(chapter, manga_title, base_download_path=DOWNLOAD_PATH):
     chapter_id = chapter['id']
     chapter_num = chapter['attributes'].get('chapter', 'unknown')
     chapter_title = chapter['attributes'].get('title', '')
