@@ -1,21 +1,40 @@
 import requests
 from config import LIMIT, OFFSET
 
-def search_manga(title):
-    url = f"https://api.mangadex.org/manga?title={title}&limit=1"
+def search_manga(title, limit=10):
+    url = f"https://api.mangadex.org/manga?title={title}&limit={limit}&includes[]=cover_art"
     print(f"Searching for manga: {title}")
     try:
         res = requests.get(url, timeout=10)
         res.raise_for_status()
         data = res.json()
-        return data['data'][0]['id']
-    except requests.exceptions.Timeout:
-        print("Request timed out. Please check your internet connection.")
+        results = []
+        for manga in data['data']:
+            manga_id = manga['id']
+            attributes = manga['attributes']
+            title = attributes['title'].get('en', list(attributes['title'].values())[0])  # fallback
+
+            # Get cover filename
+            cover_filename = None
+            for rel in manga['relationships']:
+                if rel['type'] == 'cover_art':
+                    cover_filename = rel['attributes']['fileName']
+                    break
+
+            cover_url = f"https://uploads.mangadex.org/covers/{manga_id}/{cover_filename}" if cover_filename else None
+            results.append({
+                'id': manga_id,
+                'title': title,
+                'cover_url': cover_url
+            })
+
+        return results
+
     except requests.exceptions.RequestException as e:
         print(f"Request failed: {e}")
-    except (KeyError, IndexError):
-        print("Manga not found or unexpected response format.")
-    return None
+    except KeyError:
+        print("error response")
+        return []
 
 def get_chapters(manga_id, limit=LIMIT, offset=OFFSET, chapter_from=None, chapter_to=None): #offset for beyond than 5 chapters mate
     url = f"https://api.mangadex.org/chapter?manga={manga_id}&translatedLanguage[]=en&order[chapter]=asc&limit={limit}&offset={offset}"
