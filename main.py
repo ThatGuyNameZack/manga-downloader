@@ -13,6 +13,7 @@ from api_utils import search_manga, get_chapters
 from download_utils import download_chapter_images
 from page_order import rename_images_in_folder
 from config import LIMIT, OFFSET, DOWNLOAD_PATH
+from theme import COLORS
 
 LOG_PATH = "log.json"
 
